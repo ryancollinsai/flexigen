@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flexigen — A Language for Adaptive Software</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0b;
+    --surface: #141413;
+    --surface2: #1d1d1b;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede6;
+    --muted: rgba(240,237,230,0.5);
+    --dim: rgba(240,237,230,0.3);
+    --accent: #d4853a;
+    --accent2: #7fc8a4;
+    --accent3: #8b7fd4;
+    --red: #e05c5c;
+    --code-bg: #111110;
+    --keyword: #d4853a;
+    --string: #7fc8a4;
+    --comment: rgba(240,237,230,0.28);
+    --fn: #8b7fd4;
+    --number: #d4b483;
+    --type: #6bb8d4;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem;
+    height: 56px;
+    background: rgba(12,12,11,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-brand {
+    font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--text); text-decoration: none;
+  }
+  .nav-brand span { color: var(--accent); font-family: 'Instrument Serif', serif; font-style: italic; }
+  .nav-links { display: flex; gap: 2rem; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 0.875rem;
+    font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 2rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 100%);
+  }
+  .hero-glow {
+    position: absolute; top: 20%; left: 30%;
+    width: 600px; height: 400px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(212,133,58,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-glow2 {
+    position: absolute; top: 40%; right: 20%;
+    width: 400px; height: 300px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(127,200,164,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px; margin: 0 auto; width: 100%;
+    position: relative;
+  }
+  .hero-tag {
+    display: inline-block;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid rgba(212,133,58,0.3);
+    padding: 0.25rem 0.75rem; border-radius: 2rem;
+    margin-bottom: 2rem;
+  }
+  h1 {
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 800; line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 2rem;
+  }
+  h1 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-weight: 400;
+    color: var(--accent);
+  }
+  .hero-desc {
+    font-size: 1.2rem; color: var(--muted);
+    max-width: 560px; line-height: 1.6;
+    margin-bottom: 3rem;
+  }
+  .hero-cta {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0c0c0b;
+    padding: 0.75rem 1.75rem; border-radius: 0.25rem;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.9rem; letter-spacing: 0.02em;
+    text-decoration: none; transition: opacity 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost {
+    border: 1px solid var(--border2); color: var(--muted);
+    padding: 0.75rem 1.75rem; border-radius: 0.25rem;
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.9rem; text-decoration: none;
+    transition: all 0.2s; display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── CODE HERO ── */
+  .hero-code {
+    margin-top: 5rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border2);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  .code-header {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #e05c5c; }
+  .dot.y { background: #d4b05c; }
+  .dot.g { background: #5cc46a; }
+  .code-filename { font-size: 0.78rem; color: var(--dim); font-family: 'DM Mono', monospace; margin-left: 0.5rem; }
+  pre {
+    padding: 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .kw { color: var(--keyword); }
+  .str { color: var(--string); }
+  .cmt { color: var(--comment); font-style: italic; }
+  .fn-name { color: var(--fn); }
+  .num { color: var(--number); }
+  .tp { color: var(--type); }
+  .op { color: var(--muted); }
+  .var { color: var(--text); }
+
+  /* ── SECTIONS ── */
+  section { padding: 7rem 2rem; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+  .section-tag {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--accent2);
+    margin-bottom: 1rem; display: block;
+  }
+  h2 {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 700; letter-spacing: -0.03em;
+    line-height: 1.05; margin-bottom: 1.5rem;
+  }
+  h2 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic; font-weight: 400;
+    color: var(--accent);
+  }
+  .section-lead { font-size: 1.1rem; color: var(--muted); max-width: 600px; }
+
+  /* ── PHILOSOPHY ── */
+  .philosophy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5px;
+    border: 1.5px solid var(--border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-top: 4rem;
+    background: var(--border);
+  }
+  .phil-card {
+    background: var(--surface);
+    padding: 2rem;
+  }
+  .phil-num {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--accent); margin-bottom: 1rem; font-family: 'DM Mono', monospace;
+  }
+  .phil-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; }
+  .phil-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .how-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+    align-items: start; margin-top: 4rem;
+  }
+  .how-steps { display: flex; flex-direction: column; gap: 0; }
+  .how-step {
+    display: flex; gap: 1.5rem; padding: 1.5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .how-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem; font-weight: 700; color: var(--accent);
+    font-family: 'DM Mono', monospace; flex-shrink: 0;
+  }
+  .step-content { }
+  .step-title { font-weight: 700; margin-bottom: 0.35rem; }
+  .step-desc { font-size: 0.9rem; color: var(--muted); }
+  .how-code-wrap { position: sticky; top: 5rem; }
+
+  /* ── PROGRAMS ── */
+  .programs-intro { margin-bottom: 3rem; }
+  .program-tabs {
+    display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); padding: 0.4rem 1rem; border-radius: 0.25rem;
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 0.82rem; cursor: pointer; transition: all 0.15s;
+  }
+  .tab-btn.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #0c0c0b;
+  }
+  .tab-btn:hover:not(.active) { border-color: var(--border2); color: var(--text); }
+  .program-panel { display: none; }
+  .program-panel.active { display: block; }
+  .program-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .program-meta {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 0.5rem; padding: 1.5rem;
+  }
+  .program-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .program-file { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--accent); margin-bottom: 1rem; }
+  .program-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+  .output-box {
+    background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: 0.5rem; overflow: hidden;
+  }
+  .output-header {
+    padding: 0.5rem 1rem; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--dim);
+  }
+  .output-content {
+    padding: 1rem; font-family: 'DM Mono', monospace;
+    font-size: 0.82rem; color: var(--accent2); line-height: 1.6;
+    max-height: 320px; overflow-y: auto;
+  }
+  .adapt-line { color: var(--accent); opacity: 0.7; font-style: italic; }
+
+  /* ── ECOSYSTEM ── */
+  .eco-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem; margin-top: 3rem;
+  }
+  .eco-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 0.5rem; padding: 1.25rem;
+    transition: border-color 0.2s;
+  }
+  .eco-card:hover { border-color: var(--border2); }
+  .eco-icon {
+    width: 36px; height: 36px; border-radius: 0.35rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 700; font-family: 'DM Mono', monospace;
+    color: var(--accent); margin-bottom: 1rem;
+  }
+  .eco-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.3rem; }
+  .eco-desc { font-size: 0.85rem; color: var(--muted); }
+
+  /* ── TEAM ── */
+  .team-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .team-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 0.5rem; padding: 1.5rem; text-align: center;
+  }
+  .team-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: var(--surface2); border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 700; margin: 0 auto 1rem;
+    color: var(--accent);
+  }
+  .team-name { font-weight: 700; }
+  .team-role { font-size: 0.85rem; color: var(--muted); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-brand { font-weight: 700; }
+  .footer-brand span { color: var(--accent); font-family: 'Instrument Serif', serif; font-style: italic; }
+  .footer-info { font-size: 0.85rem; color: var(--dim); }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--border); }
+
+  /* ── SPEC BADGES ── */
+  .spec-badge {
+    display: inline-block; font-size: 0.72rem; font-family: 'DM Mono', monospace;
+    padding: 0.2rem 0.5rem; border-radius: 0.2rem; margin: 0.15rem;
+    font-weight: 500;
+  }
+  .sb-ensure { background: rgba(127,200,164,0.12); color: var(--accent2); }
+  .sb-optimize { background: rgba(212,133,58,0.12); color: var(--accent); }
+  .sb-keep { background: rgba(139,127,212,0.12); color: var(--accent3); }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .how-grid { grid-template-columns: 1fr; }
+    .program-grid { grid-template-columns: 1fr; }
+    .team-grid { grid-template-columns: 1fr; }
+    .how-code-wrap { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="#">Flexi<span>gen</span></a>
+  <div class="nav-links">
+    <a href="#philosophy">Philosophy</a>
+    <a href="#how">How It Works</a>
+    <a href="#programs">Programs</a>
+    <a href="#ecosystem">Ecosystem</a>
+    <a href="#team">Team</a>
+  </div>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-inner">
+    <div class="hero-tag">CS 420 · Spring 2026</div>
+    <h1>A language that<br>learns to <em>adapt.</em></h1>
+    <p class="hero-desc">
+      You write down <em style="font-family:'Instrument Serif',serif;font-style:italic;color:var(--text);">what</em> has to stay true.
+      Flexigen picks <em style="font-family:'Instrument Serif',serif;font-style:italic;color:var(--text);">how</em> — and picks again when your data changes.
+    </p>
+    <div class="hero-cta">
+      <a href="#programs" class="btn-primary">See It Run</a>
+      <a href="#how" class="btn-ghost">How It Works</a>
+    </div>
+
+    <div class="hero-code">
+      <div class="code-header">
+        <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <span class="code-filename">sort.flex</span>
+      </div>
+      <pre><span class="cmt">// Declare what must hold — the compiler decides how</span>
+<span class="kw">adaptive fn</span> <span class="fn-name">sort</span>(<span class="var">xs</span>: <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;) <span class="op">-&gt;</span> <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt; {
+  <span class="kw">spec</span> {
+    <span class="kw">ensure</span> sorted(xs)   <span class="cmt">// invariant — never breaks</span>
+    <span class="kw">optimize</span> speed       <span class="cmt">// optimization goal</span>
+    <span class="kw">keep</span> stable          <span class="cmt">// extra constraint</span>
+  }
+  <span class="kw">baseline</span> { merge_sort(xs) }              <span class="cmt">// always correct</span>
+  <span class="kw">variant</span> timsort    <span class="kw">when</span> mostly_sorted(xs)  <span class="cmt">// runtime switch</span>
+  <span class="kw">variant</span> insertion  <span class="kw">when</span> len(xs) &lt; <span class="num">32</span>      <span class="cmt">// runtime switch</span>
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ══ PHILOSOPHY ══ -->
+<section id="philosophy">
+  <div class="section-inner">
+    <span class="section-tag">Philosophy</span>
+    <h2>Write intent.<br><em>Not implementation.</em></h2>
+    <p class="section-lead">Static code fails when hardware shifts, data changes, or workloads grow. Flexigen makes adaptation explicit, inspectable, and safe.</p>
+
+    <div class="philosophy-grid">
+      <div class="phil-card">
+        <div class="phil-num">01</div>
+        <div class="phil-title">Intent-first</div>
+        <div class="phil-desc">Define <em>what</em> must stay true through the <code style="font-family:'DM Mono',monospace;font-size:0.82em;color:var(--accent2)">spec</code> block. Correctness, determinism, and optimization goal are locked. The compiler finds the how.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">02</div>
+        <div class="phil-title">Safe adaptation</div>
+        <div class="phil-desc">Public types, constraints, and security rules cannot change unless explicitly permitted. Every variant must pass the same test suite as the baseline before it can run.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">03</div>
+        <div class="phil-title">AI-assisted, human-gated</div>
+        <div class="phil-desc">AI may propose new variants. The compiler rejects them unless they pass type checks, contracts, and benchmarks. Proposals never auto-deploy.</div>
+      </div>
+      <div class="phil-card">
+        <div class="phil-num">04</div>
+        <div class="phil-title">Full replayability</div>
+        <div class="phil-desc">Every adaptation is logged. Pin a function to any chosen version, replay a run with exact variant decisions, or roll back. The audit trail is built in.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ HOW IT WORKS ══ -->
+<section id="how">
+  <div class="section-inner">
+    <span class="section-tag">Core Construct</span>
+    <h2>Adaptive <em>functions.</em></h2>
+    <p class="section-lead">Every adaptive function has four parts. Together they let the runtime prove behavior is preserved before it changes anything.</p>
+
+    <div class="how-grid">
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <div class="step-title">
+              <span class="spec-badge sb-ensure">spec</span> — The fixed contract
+            </div>
+            <div class="step-desc">Correctness, determinism, and the optimization goal stay locked in. A variant that breaks any clause is rejected at compile time.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <div class="step-title">baseline — The trusted reference</div>
+            <div class="step-desc">Always correct. The yardstick a variant has to beat or match on both correctness and performance.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <div class="step-title">variant — Conditional alternatives</div>
+            <div class="step-desc">Each variant declares a <code style="font-family:'DM Mono',monospace;font-size:0.85em;color:var(--accent)">when</code> guard. The runtime evaluates guards, picks the first match, and falls back to baseline if none qualify.</div>
+          </div>
+        </div>
+        <div class="how-step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <div class="step-title">report — Every swap logged</div>
+            <div class="step-desc">The adaptation report records which variant ran, why it was chosen, and the profile data that drove the decision. Fully auditable.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how-code-wrap">
+        <div class="hero-code" style="margin-top:0">
+          <div class="code-header">
+            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+            <span class="code-filename">dup.flex</span>
+          </div>
+          <pre><span class="cmt">// Adapts by input data shape</span>
+<span class="kw">adaptive fn</span> <span class="fn-name">has_duplicates</span>(<span class="var">a</span>: <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;) <span class="op">-&gt;</span> <span class="tp">Bool</span> {
+  <span class="kw">spec</span> { <span class="kw">ensure</span> exact; <span class="kw">optimize</span> speed }
+
+  <span class="cmt">// O(n²) — always correct</span>
+  <span class="kw">baseline</span> { nested_scan(a) }
+
+  <span class="cmt">// O(n) hash — for general lists</span>
+  <span class="kw">variant</span> hashset_scan
+
+  <span class="cmt">// O(n) bitmap — when values are small</span>
+  <span class="kw">variant</span> bitmap_scan <span class="kw">when</span> max(a) &lt; <span class="num">1_000_000</span>
+}</pre>
+        </div>
+        <div style="margin-top:1rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:0.5rem;">
+          <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--dim);margin-bottom:0.75rem;">Adaptation Report</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent2);">
+            [AdaptReport] has_duplicates:<br>
+            &nbsp;&nbsp;selected 'hashset_scan'<br>
+            &nbsp;&nbsp;<span style="color:var(--muted)">condition met: max(a) &lt; 1_000_000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ PROGRAMS ══ -->
+<section id="programs">
+  <div class="section-inner">
+    <span class="section-tag">Programs</span>
+    <h2>Five programs.<br><em>One interpreter.</em></h2>
+    <p class="section-lead">From hello world to adaptive data analysis — all running on the Flexigen interpreter.</p>
+
+    <div class="program-tabs" style="margin-top:3rem;">
+      <button class="tab-btn active" onclick="showTab('hw')">hello_world.flex</button>
+      <button class="tab-btn" onclick="showTab('fib')">fibonacci.flex</button>
+      <button class="tab-btn" onclick="showTab('list')">list_ops.flex</button>
+      <button class="tab-btn" onclick="showTab('fb')">fizzbuzz.flex</button>
+      <button class="tab-btn" onclick="showTab('da')">data_analysis.flex</button>
+    </div>
+
+    <!-- HELLO WORLD -->
+    <div class="program-panel active" id="panel-hw">
+      <div class="program-grid">
+        <div>
+          <div class="program-meta" style="margin-bottom:1rem;">
+            <div class="program-file">hello_world.flex</div>
+            <div class="program-title">Hello World & Clamp</div>
+            <div class="program-desc">Demonstrates basic I/O, variable declarations, function definitions, and a simple <code style="font-family:'DM Mono',monospace;color:var(--accent2);font-size:0.85em">clamp</code> function that caps scores at a limit. Shows both string concatenation and list iteration.</div>
+          </div>
+          <div class="hero-code">
+            <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-filename">hello_world.flex</span></div>
+            <pre style="font-size:0.8rem"><span class="kw">let</span> <span class="var">name</span>: <span class="tp">String</span> = <span class="str">"World"</span>
+<span class="kw">let</span> <span class="var">limit</span>: <span class="tp">Int</span> = <span class="num">90</span>
+<span class="kw">let</span> <span class="var">scores</span> = <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;[<span class="num">88</span>, <span class="num">92</span>, <span class="num">75</span>, <span class="num">61</span>, <span class="num">99</span>]
+
+<span class="kw">fn</span> <span class="fn-name">greet</span>(<span class="var">who</span>: <span class="tp">String</span>) <span class="op">-&gt;</span> <span class="tp">String</span> {
+  <span class="kw">return</span> <span class="str">"Hello, "</span> + who + <span class="str">"!"</span>
+}
+
+<span class="kw">fn</span> <span class="fn-name">clamp</span>(<span class="var">x</span>: <span class="tp">Int</span>) <span class="op">-&gt;</span> <span class="tp">Int</span> {
+  <span class="kw">if</span> x &gt; limit { <span class="kw">return</span> limit }
+  <span class="kw">else</span> { <span class="kw">return</span> x }
+}
+
+<span class="kw">print</span>(greet(name))
+<span class="kw">for</span> n <span class="kw">in</span> scores { <span class="kw">print</span>(clamp(n)) }</pre>
+          </div>
+        </div>
+        <div class="output-box">
+          <div class="output-header">Interpreter Output</div>
+          <div class="output-content">── Running hello_world.flex ──<br>Hello, World! Welcome to Flexigen v1<br>5 squared is: 25<br>10 squared is: 100<br>Clamped scores:<br>88<br>90<br>75<br>61<br>90</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIBONACCI -->
+    <div class="program-panel" id="panel-fib">
+      <div class="program-grid">
+        <div>
+          <div class="program-meta" style="margin-bottom:1rem;">
+            <div class="program-file">fibonacci.flex</div>
+            <div class="program-title">Adaptive Fibonacci</div>
+            <div class="program-desc">An adaptive function that selects between <code style="font-family:'DM Mono',monospace;color:var(--accent2);font-size:0.85em">fib_recursive</code> (baseline) and <code style="font-family:'DM Mono',monospace;color:var(--accent2);font-size:0.85em">fib_iterative</code> (variant). For n&nbsp;>&nbsp;10, the iterative variant is chosen — logged in the adaptation report.</div>
+          </div>
+          <div class="hero-code">
+            <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-filename">fibonacci.flex</span></div>
+            <pre style="font-size:0.8rem"><span class="kw">adaptive fn</span> <span class="fn-name">fibonacci</span>(<span class="var">n</span>: <span class="tp">Int</span>) <span class="op">-&gt;</span> <span class="tp">Int</span> {
+  <span class="kw">spec</span> { <span class="kw">ensure</span> exact; <span class="kw">optimize</span> speed }
+  <span class="kw">baseline</span> { fib_recursive(n) }
+  <span class="kw">variant</span> fib_iterative <span class="kw">when</span> n &gt; <span class="num">10</span>
+  <span class="kw">variant</span> fib_memoized  <span class="kw">when</span> n &gt; <span class="num">30</span>
+}</pre>
+          </div>
+        </div>
+        <div class="output-box">
+          <div class="output-header">Interpreter Output</div>
+          <div class="output-content">── Running fibonacci.flex ──<br>fib(0) = 0<br>fib(1) = 1<br>fib(2) = 1<br>fib(3) = 2<br>fib(4) = 3<br>fib(5) = 5<br>fib(6) = 8<br>fib(7) = 13<br>fib(8) = 21<br>fib(9) = 34<br>fib(10) = 55<br>fib(11) = 89<br><br><span class="adapt-line">[AdaptReport] fibonacci:</span><br><span class="adapt-line">&nbsp;&nbsp;selected 'fib_iterative'</span><br><span class="adapt-line">&nbsp;&nbsp;condition met: n > 10</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST OPS -->
+    <div class="program-panel" id="panel-list">
+      <div class="program-grid">
+        <div>
+          <div class="program-meta" style="margin-bottom:1rem;">
+            <div class="program-file">list_ops.flex</div>
+            <div class="program-title">List Operations</div>
+            <div class="program-desc">Demonstrates list manipulation: sum, max, filtering even numbers, doubling values, and an adaptive sort that automatically switches to insertion sort for small lists (len &lt; 32).</div>
+          </div>
+          <div class="hero-code">
+            <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-filename">list_ops.flex</span></div>
+            <pre style="font-size:0.8rem"><span class="kw">let</span> <span class="var">numbers</span> = <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;[<span class="num">3</span>,<span class="num">7</span>,<span class="num">2</span>,<span class="num">9</span>,<span class="num">4</span>,<span class="num">6</span>,<span class="num">1</span>,<span class="num">8</span>,<span class="num">5</span>,<span class="num">10</span>]
+
+<span class="kw">fn</span> <span class="fn-name">is_even</span>(<span class="var">n</span>: <span class="tp">Int</span>) <span class="op">-&gt;</span> <span class="tp">Bool</span> { <span class="kw">return</span> n % <span class="num">2</span> == <span class="num">0</span> }
+<span class="kw">fn</span> <span class="fn-name">double</span>(<span class="var">n</span>: <span class="tp">Int</span>) <span class="op">-&gt;</span> <span class="tp">Int</span>  { <span class="kw">return</span> n * <span class="num">2</span> }
+
+<span class="kw">adaptive fn</span> <span class="fn-name">sort</span>(<span class="var">xs</span>: <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;) <span class="op">-&gt;</span> <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt; {
+  <span class="kw">spec</span> { <span class="kw">ensure</span> sorted(xs); <span class="kw">keep</span> stable }
+  <span class="kw">baseline</span> { merge_sort(xs) }
+  <span class="kw">variant</span> insertion <span class="kw">when</span> len(xs) &lt; <span class="num">32</span>
+}</pre>
+          </div>
+        </div>
+        <div class="output-box">
+          <div class="output-header">Interpreter Output</div>
+          <div class="output-content">── Running list_ops.flex ──<br>Original list: [3, 7, 2, 9, 4, 6, 1, 8, 5, 10]<br>Sum: 55<br>Max: 10<br>Even numbers doubled:<br>4<br>8<br>12<br>16<br>20<br>Sorted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]<br><br><span class="adapt-line">[AdaptReport] sort:</span><br><span class="adapt-line">&nbsp;&nbsp;selected 'baseline'</span><br><span class="adapt-line">&nbsp;&nbsp;default baseline selected</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIZZBUZZ -->
+    <div class="program-panel" id="panel-fb">
+      <div class="program-grid">
+        <div>
+          <div class="program-meta" style="margin-bottom:1rem;">
+            <div class="program-file">fizzbuzz.flex</div>
+            <div class="program-title">FizzBuzz</div>
+            <div class="program-desc">Classic FizzBuzz using Flexigen syntax — demonstrates conditional logic, modulo arithmetic, string return types, and while-loop iteration from 1 to 30.</div>
+          </div>
+          <div class="hero-code">
+            <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-filename">fizzbuzz.flex</span></div>
+            <pre style="font-size:0.8rem"><span class="kw">fn</span> <span class="fn-name">fizzbuzz</span>(<span class="var">n</span>: <span class="tp">Int</span>) <span class="op">-&gt;</span> <span class="tp">String</span> {
+  <span class="kw">if</span> n % <span class="num">15</span> == <span class="num">0</span> { <span class="kw">return</span> <span class="str">"FizzBuzz"</span> }
+  <span class="kw">if</span> n % <span class="num">3</span>  == <span class="num">0</span> { <span class="kw">return</span> <span class="str">"Fizz"</span> }
+  <span class="kw">if</span> n % <span class="num">5</span>  == <span class="num">0</span> { <span class="kw">return</span> <span class="str">"Buzz"</span> }
+  <span class="kw">return</span> n
+}
+
+<span class="kw">let</span> <span class="var">i</span>: <span class="tp">Int</span> = <span class="num">1</span>
+<span class="kw">while</span> i &lt;= <span class="num">30</span> {
+  <span class="kw">print</span>(fizzbuzz(i))
+  i = i + <span class="num">1</span>
+}</pre>
+          </div>
+        </div>
+        <div class="output-box">
+          <div class="output-header">Interpreter Output</div>
+          <div class="output-content">── Running fizzbuzz.flex ──<br>1<br>2<br>Fizz<br>4<br>Buzz<br>Fizz<br>7<br>8<br>Fizz<br>Buzz<br>11<br>Fizz<br>13<br>14<br>FizzBuzz<br>16<br>17<br>Fizz<br>19<br>Buzz<br>Fizz<br>22<br>23<br>Fizz<br>Buzz<br>26<br>Fizz<br>28<br>29<br>FizzBuzz</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATA ANALYSIS -->
+    <div class="program-panel" id="panel-da">
+      <div class="program-grid">
+        <div>
+          <div class="program-meta" style="margin-bottom:1rem;">
+            <div class="program-file">data_analysis.flex</div>
+            <div class="program-title">Adaptive Data Analysis</div>
+            <div class="program-desc">Complex program with an adaptive duplicate-detection function, statistical helpers (mean, min, max, count_above), and a full report across two datasets. Demonstrates the adaptation report in action.</div>
+          </div>
+          <div class="hero-code">
+            <div class="code-header"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div><span class="code-filename">data_analysis.flex</span></div>
+            <pre style="font-size:0.8rem"><span class="kw">adaptive fn</span> <span class="fn-name">has_duplicates</span>(<span class="var">a</span>: <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;) <span class="op">-&gt;</span> <span class="tp">Bool</span> {
+  <span class="kw">spec</span> { <span class="kw">ensure</span> exact; <span class="kw">optimize</span> speed }
+  <span class="kw">baseline</span> { nested_scan(a) }
+  <span class="kw">variant</span> hashset_scan
+  <span class="kw">variant</span> bitmap_scan <span class="kw">when</span> max(a) &lt; <span class="num">1_000_000</span>
+}
+
+<span class="kw">let</span> dataset_a = <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;[<span class="num">10</span>,<span class="num">25</span>,<span class="num">37</span>,<span class="num">42</span>,<span class="num">58</span>...]
+<span class="kw">let</span> dataset_b = <span class="tp">List</span>&lt;<span class="tp">Int</span>&gt;[<span class="num">5</span>,<span class="num">12</span>,<span class="num">33</span>,<span class="num">12</span>,<span class="num">47</span>...]
+
+<span class="kw">print</span>(has_duplicates(dataset_a))
+<span class="kw">print</span>(has_duplicates(dataset_b))</pre>
+          </div>
+        </div>
+        <div class="output-box">
+          <div class="output-header">Interpreter Output</div>
+          <div class="output-content">=== Flexigen Data Analysis Report ===<br><br>--- Dataset A ---<br>Values: [10, 25, 37, 42, 58, 61, 79, 83, 91, 100]<br>Length: 10 &nbsp;Mean: 58 &nbsp;Min: 10 &nbsp;Max: 100<br>Has duplicates: false<br>Count above 50: 6<br><br>--- Dataset B ---<br>Values: [5, 12, 33, 12, 47, 5, 88, 91, 33, 100]<br>Length: 10 &nbsp;Mean: 42 &nbsp;Min: 5 &nbsp;Max: 100<br>Has duplicates: true<br>Count above 50: 3<br><br>=== End of Report ===<br><br><span class="adapt-line">[AdaptReport] has_duplicates:</span><br><span class="adapt-line">&nbsp;&nbsp;selected 'hashset_scan' — condition met</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ ECOSYSTEM ══ -->
+<section id="ecosystem">
+  <div class="section-inner">
+    <span class="section-tag">Ecosystem</span>
+    <h2>Everything you need.<br><em>Built in.</em></h2>
+    <p class="section-lead">Flexigen ships with a complete toolchain for writing, profiling, and auditing adaptive programs.</p>
+
+    <div class="eco-grid">
+      <div class="eco-card">
+        <div class="eco-icon">flexc</div>
+        <div class="eco-name">Flexigen Compiler</div>
+        <div class="eco-desc">Compiles and interprets .flex files. Validates constraints, type-checks variants, and selects implementations at runtime.</div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon" style="color:var(--accent2)">bench</div>
+        <div class="eco-name">FlexBench</div>
+        <div class="eco-desc">Profiler that measures baseline vs variant performance. Generates benchmark reports to guide adaptive decisions.</div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon" style="color:var(--accent3)">scope</div>
+        <div class="eco-name">FlexScope</div>
+        <div class="eco-desc">Visual adaptation timeline — shows which variant ran on each call, with the profile data that drove the choice.</div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon" style="color:var(--type)">audit</div>
+        <div class="eco-name">FlexAudit</div>
+        <div class="eco-desc">Immutable adaptation log. Pin functions to versions, replay runs with exact decisions, or generate compliance reports.</div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon" style="color:var(--number)">pkg</div>
+        <div class="eco-name">flexpkg</div>
+        <div class="eco-desc">Package manager for Flexigen libraries. Handles versioning and dependency resolution for adaptive modules.</div>
+      </div>
+      <div class="eco-card">
+        <div class="eco-icon" style="color:var(--muted)">vsc</div>
+        <div class="eco-name">VS Code Extension</div>
+        <div class="eco-desc">Syntax highlighting, inline adaptation reports, variant picker, and FlexBench integration for VS Code.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:2rem;">
+      <div style="font-size:0.78rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--dim);margin-bottom:1rem;">Standard Libraries</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+        <span class="spec-badge sb-ensure">flex.algorithms</span>
+        <span class="spec-badge sb-optimize">flex.graph</span>
+        <span class="spec-badge sb-keep">flex.data</span>
+        <span class="spec-badge sb-ensure">flex.math</span>
+        <span class="spec-badge sb-optimize">flex.robotics</span>
+        <span class="spec-badge sb-keep">flex.ai_proposals</span>
+        <span class="spec-badge sb-ensure">flex.testing</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ══ TEAM ══ -->
+<section id="team">
+  <div class="section-inner">
+    <span class="section-tag">Authors</span>
+    <h2>Built by <em>three.</em></h2>
+    <p class="section-lead">CS 420 — Programming Language Design, Spring 2026.</p>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">NM</div>
+        <div class="team-name">Nikhil Maharaj</div>
+        <div class="team-role">Language Design & Semantics</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="color:var(--accent2)">RC</div>
+        <div class="team-name">Ryan Collins</div>
+        <div class="team-role">Compiler & Runtime</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar" style="color:var(--accent3)">CS</div>
+        <div class="team-name">Chris Sapien</div>
+        <div class="team-role">Toolchain & Ecosystem</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-brand">Flexi<span>gen</span></div>
+  <div class="footer-info">CS 420-04 · Spring 2026 · Self-Adaptation & Recurrent Implementation</div>
+</footer>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.program-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+</script>
+</body>
+</html>
