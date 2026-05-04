@@ -1,5 +1,6 @@
-// data_analysis.flex — Flexigen Complex Program
-// Adaptive duplicate detection, statistics, and reporting
+// data_analysis.flex
+// The complex program. Adaptive duplicate detection across two datasets,
+// summary stats for each, and a printed report. Adaptation log prints at the end.
 
 adaptive fn has_duplicates(a: List<Int>) -> Bool {
   spec { ensure exact; optimize speed }

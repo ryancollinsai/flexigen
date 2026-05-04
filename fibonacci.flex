@@ -1,5 +1,7 @@
-// fibonacci.flex — Flexigen Program 2
-// Demonstrates adaptive functions with multiple variants
+// fibonacci.flex
+// An adaptive function with two variants. The runtime picks the iterative
+// variant when n > 10, the memoized variant when n > 30, and falls back
+// to the recursive baseline otherwise.
 
 adaptive fn fibonacci(n: Int) -> Int {
   spec { ensure exact; optimize speed }

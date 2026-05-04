@@ -1,5 +1,5 @@
-// fizzbuzz.flex — Flexigen FizzBuzz
-// Classic FizzBuzz using Flexigen syntax
+// fizzbuzz.flex
+// FizzBuzz from 1 to 30 in Flexigen syntax.
 
 fn fizzbuzz(n: Int) -> String {
   if n % 15 == 0 { return "FizzBuzz" }

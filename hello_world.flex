@@ -1,5 +1,5 @@
-// hello_world.flex — Flexigen Program 1
-// Basic I/O, variables, and a simple function
+// hello_world.flex
+// The starter program. Variables, a couple of functions, string concat, a for loop.
 
 let name: String = "World"
 let version: Int = 1

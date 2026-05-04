@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Flexigen Interpreter
-CS 420 - Spring 2026
-Authors: Nikhil Maharaj, Ryan Collins, Chris Sapien
+Flexigen interpreter.
 
-A self-adapting programming language interpreter.
+A tree-walking interpreter for Flexigen, a small language whose functions
+can carry alternate implementations and pick one at runtime based on guards
+on the input. The lexer, parser, and evaluator all live in this file.
+
+CS 420, Spring 2026. Nikhil Maharaj, Ryan Collins, Chris Sapien.
 """
 
 import io
@@ -17,9 +19,9 @@ if sys.platform == "win32" and hasattr(sys.stdout, "buffer"):
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", line_buffering=True)
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  TOKEN TYPES
-# ─────────────────────────────────────────────
+# ============================================
 class TT:
     INT = "INT"; FLOAT = "FLOAT"; STRING = "STRING"; BOOL = "BOOL"
     IDENT = "IDENT"; PLUS = "PLUS"; MINUS = "MINUS"; STAR = "STAR"
@@ -48,9 +50,9 @@ class Token:
         return f"Token({self.type}, {self.value!r})"
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  LEXER
-# ─────────────────────────────────────────────
+# ============================================
 KEYWORDS = {
     "let": TT.LET, "mut": TT.MUT, "fn": TT.FN, "return": TT.RETURN,
     "if": TT.IF, "else": TT.ELSE, "while": TT.WHILE, "for": TT.FOR,
@@ -201,9 +203,9 @@ class Lexer:
         return self.tokens
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  AST NODES
-# ─────────────────────────────────────────────
+# ============================================
 class Node:
     pass
 
@@ -273,9 +275,9 @@ class VariantDecl(Node):
     def __init__(self, name, condition=None): self.name = name; self.condition = condition
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  PARSER
-# ─────────────────────────────────────────────
+# ============================================
 class Parser:
     def __init__(self, tokens: List[Token]):
         self.tokens = tokens
@@ -646,16 +648,16 @@ class Parser:
         return Literal(None)
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  RETURN SIGNAL
-# ─────────────────────────────────────────────
+# ============================================
 class ReturnSignal(Exception):
     def __init__(self, value): self.value = value
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  ENVIRONMENT
-# ─────────────────────────────────────────────
+# ============================================
 class Environment:
     def __init__(self, parent=None):
         self.vars: Dict[str, Any] = {}
@@ -687,31 +689,31 @@ class Environment:
         return False
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  ADAPTIVE RUNTIME
-# ─────────────────────────────────────────────
+# ============================================
 class AdaptationReport:
     def __init__(self):
         self.entries: List[str] = []
 
     def log(self, fn_name: str, chosen: str, reason: str):
-        entry = f"[AdaptReport] {fn_name}: selected '{chosen}' — {reason}"
+        entry = f"[AdaptReport] {fn_name}: selected '{chosen}', {reason}"
         self.entries.append(entry)
 
     def dump(self):
         if self.entries:
-            print("\n── Adaptation Report ──")
+            print("\n-- Adaptation Report --")
             for e in self.entries:
                 print(e)
-            print("───────────────────────\n")
+            print("------------------------\n")
 
 
 REPORT = AdaptationReport()
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  BUILT-IN FUNCTIONS
-# ─────────────────────────────────────────────
+# ============================================
 def builtin_len(args):
     if len(args) != 1:
         raise TypeError("len() takes 1 argument")
@@ -804,9 +806,9 @@ BUILTINS = {
 }
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  INTERPRETER
-# ─────────────────────────────────────────────
+# ============================================
 class Interpreter:
     def __init__(self):
         self.global_env = Environment()
@@ -1054,9 +1056,9 @@ class Interpreter:
         return str(val)
 
 
-# ─────────────────────────────────────────────
+# ============================================
 #  MAIN ENTRY POINT
-# ─────────────────────────────────────────────
+# ============================================
 def run_file(path: str):
     try:
         with open(path, "r") as f:
@@ -1065,7 +1067,7 @@ def run_file(path: str):
         print(f"Error: File not found: {path}")
         sys.exit(1)
 
-    print(f"── Running {path} ──")
+    print(f"-- Running {path} --")
     try:
         lexer = Lexer(source)
         tokens = lexer.tokenize()
@@ -1093,7 +1095,7 @@ def run_file(path: str):
 
 def main():
     if len(sys.argv) < 2:
-        print("Flexigen Interpreter v1.0")
+        print("Flexigen interpreter v1.0")
         print("Usage: flexigen <file.flex>")
         print("       flexigen --run-all")
         sys.exit(0)

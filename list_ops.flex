@@ -1,5 +1,6 @@
-// list_ops.flex — Flexigen Program 3
-// Demonstrates list operations, iteration, and built-in functions
+// list_ops.flex
+// List operations: sum, max, filter, double. Plus an adaptive sort that
+// uses merge sort as baseline and switches to insertion sort for short lists.
 
 let numbers = List<Int>[3, 7, 2, 9, 4, 6, 1, 8, 5, 10]
 
