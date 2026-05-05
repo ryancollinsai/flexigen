@@ -91,6 +91,10 @@ Source (.flex)
 
 The full landing page is in `index.html`. Open it locally in a browser, or visit https://ryancollinsai.github.io/flexigen/.
 
+## Video presentation
+
+https://youtu.be/gF-rgQgYXdA
+
 ## What is not in this prototype
 
 Equivalence checking is hard. Flexigen does not currently prove that a variant is semantically equal to the baseline. It runs the same tests against both and trusts the result. A real version would need formal proofs for the cases that matter.
