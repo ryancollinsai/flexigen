@@ -794,6 +794,7 @@ BUILTINS = {
     "mostly_sorted": lambda args: builtin_mostly_sorted(args),
     "merge_sort": lambda args: builtin_merge_sort(args[0]),
     "insertion_sort": lambda args: builtin_insertion_sort(args[0]),
+    "insertion": lambda args: builtin_insertion_sort(args[0]),
     "nested_scan": lambda args: builtin_nested_scan(args[0]),
     "hashset_scan": lambda args: builtin_hashset_scan(args[0]),
     "bitmap_scan": lambda args: builtin_hashset_scan(args[0]),
@@ -967,15 +968,16 @@ class Interpreter:
 
         for variant in fn.variants:
             if self.check_variant_condition(variant, args, env):
-                # Try to find a built-in or user fn with this variant name
+                reason = f"condition met: {variant.condition}" if variant.condition else "no guard, always eligible"
                 if variant.name in BUILTINS:
-                    REPORT.log(fn.name, variant.name, f"condition met: {variant.condition}")
+                    REPORT.log(fn.name, variant.name, reason)
                     return BUILTINS[variant.name](args)
                 elif variant.name in self.functions:
-                    REPORT.log(fn.name, variant.name, f"condition met: {variant.condition}")
+                    REPORT.log(fn.name, variant.name, reason)
                     return self.call_fn(self.functions[variant.name], args, env)
-                # variant name matches a builtin pattern
-                break
+                # Variant name has no implementation. Continue scanning rather than
+                # silently falling through to baseline so a later variant can win.
+                continue
 
         REPORT.log(fn.name, chosen_name, "default baseline selected")
         return self.call_fn_with_body(fn, chosen_body, args, env)
